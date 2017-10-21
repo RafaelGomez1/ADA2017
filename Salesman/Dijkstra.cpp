@@ -23,23 +23,19 @@ void CGraph::Dijkstra(CVertex *pStart)
 			double dist = current->m_DijkstraDistance + (v->m_Point - current->m_Point).Module();
 			if (dist < v->m_DijkstraDistance) {
 				v->m_DijkstraDistance = dist;
-				current->m_pDijkstraPrevious = current;
+				v->m_pDijkstraPrevious = current;
 
 			}
 		}
 
 		current->m_DijkstraVisit = true;
-		current = pStart;
+		current = NULL;
 		for (CVertex &v : m_Vertices) {
 
-			if (!v.m_DijkstraVisit) {
-				if (current == pStart || v.m_DijkstraDistance < current->m_DijkstraDistance)
+				if (!v.m_DijkstraVisit && (current == NULL || v.m_DijkstraDistance < current->m_DijkstraDistance))
 					current = &v;
-
-			}
-
 		}
-	} while (current != pStart);
+	} while (current != NULL);
 
 }
 
