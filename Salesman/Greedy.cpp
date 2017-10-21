@@ -3,41 +3,74 @@
 
 // SalesmanTrackGreedy =========================================================
 
-CTrack CGraph::SalesmanTrackGreedy(CVisits &visits) 
+CTrack CGraph::SalesmanTrackGreedy(CVisits &visits)
 {
-	
-	CVertex* next = visits.m_Vertices.front();
+	//Some pointers
+	CVertex* current = visits.m_Vertices.front();
+	CVertex* last_one = visits.m_Vertices.back();
+	CVertex* del;
+	CVertex* rec;
+
+	//Auxiliar for the minimum distance of the visits elements at each iteration.
 	double min_dist;
-	CVertex* aux;
 
+	//Needed Tracks structures
+	CTrack partial_track(this);
 	CTrack track(this);
-	
-	aux = visits.m_Vertices.back();
-	visits.m_Vertices.pop_back();
-	track.AddFirst(visits.m_Vertices.front());
-	visits.m_Vertices.pop_front();
 
+	//Deletion of the last element
+	visits.m_Vertices.pop_back();
+
+
+
+
+	// Addition of the first element to main track
+	track.AddFirst(current);
 	
+	//Main loop
 	while (!visits.m_Vertices.empty()) {
 
-		CGraph::Dijkstra(next);
+
+		Dijkstra(current);
+		
+		//Next vertex to delete
+		del = current;
+
 		min_dist = numeric_limits<double>::max();
+		
+
+		//Calculation of closest vertex
 		for (CVertex* c : visits.m_Vertices) {
+
 			if (min_dist > c->m_DijkstraDistance) {
+
 				min_dist = c->m_DijkstraDistance;
-				next = c;
+				current = c;
+
 			}
-			
+
 		}
-		visits.m_Vertices.remove(next);
-		next->m_pDijkstraPrevious = track.m_Vertices.back();
-		track.AddLast(next);
+		//Auxiliar to keep fixed the current pointer.
+		rec = current;
+		
+		//Generation of partial track between new vertex and the previous one.
+		while (rec->m_pDijkstraPrevious != del) {
+
+			partial_track.AddFirst(rec);
+			rec = rec->m_pDijkstraPrevious;
+
+		}
+
+		//Its unecessaty to append the last element of the partial track because we had appended at the previous iteration.
+		visits.m_Vertices.remove(del);
+		track.Append(partial_track);
+		partial_track.Clear();
 
 	}
-	track.AddLast(aux);
+
+	//append of the last element of the visits list.
+	track.AddLast(last_one);
+
 	return track;
-
-
-	
 
 }
