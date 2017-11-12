@@ -80,82 +80,75 @@ CTrack CGraph::SalesmanTrackBacktracking(CVisits &visits)
 	return bestTrack;
 }
 
-// SalesmanTrackBacktrackingGreedy ============================================
-void BacktrackingGreedy(list<int> &best, list<int> &visited, list<int> &toVisit, vector<double>& matrix,vector<double>& min_cost_matrix,double &best_cost, double current_cost, int &length) {
-	
+// SalesmanTrackBacktrackingGreedy =============================================
 
-	double h = 0;
-	for (int i : toVisit) {
-		h += min_cost_matrix[i];
-	}
-	h += min_cost_matrix[length - 1];
+void BacktrackingGreedy(list<int> &best_path, list<int> &visited, set<int> &to_visit, vector<double> &matrix, double &bestCost, double partialCost, int &nVertex, vector<double> &min_dist_matrix) {
 
-
-	if (current_cost + h > best_cost)
-		return;
-
-	if (toVisit.size() == 0) {
-		int d = matrix[visited.back()*length + length - 1];
-		if (current_cost + d < best_cost) {
-			best = visited;
-			best_cost = current_cost + d;
+	if (to_visit.size() == 0) {
+		int d = matrix[visited.back()*nVertex + nVertex - 1];
+		if (partialCost + d < bestCost) {
+			best_path = visited;
+			bestCost = partialCost + d;
 		}
 	}
 	else {
-		int current = visited.back();
-		int distance;
-		list<int> temp = toVisit;
-		for (int i : temp) {
-			distance = matrix[current*length + i];
-			if (current_cost + distance < best_cost) {
-				toVisit.remove(i);
-				visited.push_back(i);
-				BacktrackingGreedy(best, visited, toVisit, matrix, min_cost_matrix,best_cost,current_cost + distance, length);
-				visited.pop_back();
-				toVisit.push_front(i);			
+		double h = 0;
+		for (int i : to_visit) {
+			h += min_dist_matrix[i];
+		}
+		h += min_dist_matrix[nVertex - 1];
+		if (partialCost + h - 1 <= bestCost) {
+			int actual = visited.back();
+			int distance;
+			set<int> tempToVisit = to_visit;
+			for (int i : tempToVisit) {
+				distance = matrix[actual*nVertex + i];
+				if (partialCost + distance < bestCost) {
+					to_visit.erase(i);
+					visited.push_back(i);
+					BacktrackingGreedy(best_path, visited, to_visit, matrix, bestCost, partialCost + distance, nVertex, min_dist_matrix);
+					visited.remove(i);
+					to_visit.insert(i);
+				}
 			}
 		}
 	}
-
 }
 
 CTrack CGraph::SalesmanTrackBacktrackingGreedy(CVisits &visits)
 {
-
 	CTrack bestTrack(this);
 	CTrack partialTrack(this);
 	list<int> visited;
-	list<int> best;
-	list<int> toVisit;
+	list<int> best_path;
+	set<int> to_visit;
+	double min;
 	double best_cost = numeric_limits<double>::max();
+	int count = 1;
 	int length = visits.m_Vertices.size();
 
 	vector<double> matrix;
 	matrix.resize(length*length);
-
-
 	vector<CVertex*> v{ begin(visits.m_Vertices), end(visits.m_Vertices) };
 
 	for (int i = 0; i < length; i++) {
 		CGraph::Dijkstra(v[i]);
 		for (int j = 0; j < length; j++) {
-			matrix[i*length + i] = (v[i]->m_DijkstraDistance);
+			matrix[i*length + j] = (v[j]->m_DijkstraDistance);
 		}
 	}
 
 	vector<double> min_dist_matrix;
 	min_dist_matrix.resize(length);
-	double min;
-	for (int i = 0; i < length; i++) {
-		min = matrix[0 + i];
-		for (int j = 0; j < length; j++) {
-			if (matrix[j*length + i] < min && j != i) {
-				min = matrix[j*length + i];
+	for (int j = 0; j < length; j++) {
+		min = matrix[0 + j];
+		for (int i = 0; i < length; i++) {
+			if (matrix[i*length + j] < min && i != j) {
+				min = matrix[i*length + j];
 			}
-			min_dist_matrix[i] = min;
+			min_dist_matrix[j] = min;
 		}
 	}
-
 
 	visited.push_front(0);
 
@@ -164,32 +157,34 @@ CTrack CGraph::SalesmanTrackBacktrackingGreedy(CVisits &visits)
 	visits.m_Vertices.pop_back();
 	visits.m_Vertices.pop_front();
 
-	int count = 1;
+	
 	for (CVertex *pCount : visits.m_Vertices) {
-		toVisit.push_back(count);
+		to_visit.insert(count);
 		count++;
 	}
+	BacktrackingGreedy(best_path, visited, to_visit, matrix, best_cost, 0, length, min_dist_matrix);
 
-	BacktrackingGreedy(best, visited, toVisit, matrix, min_dist_matrix,best_cost,0, length);
+	best_path.push_back(length - 1);
 
-	best.push_back(length - 1);
-
-	int origin_index = best.front();
+	int origin_index = best_path.front();
 	CVertex *origin = v[origin_index];
-	int dedstination_index;
+	int destination_index;
 	CVertex *destination;
-	best.pop_front();
+
+	best_path.pop_front();
 	bestTrack.AddFirst(first);
-	for (int n : best) {
+
+	for (int n : best_path) {
 		partialTrack.Clear();
-		dedstination_index = n;
-		destination = v[dedstination_index];
+		destination_index = n;
+		destination = v[destination_index];
 		CGraph::Dijkstra(v[origin_index]);
+
 		while (origin != destination) {
 			partialTrack.AddFirst(destination);
 			destination = destination->m_pDijkstraPrevious;
 		}
-		origin_index = dedstination_index;
+		origin_index = destination_index;
 		origin = v[origin_index];
 		bestTrack.Append(partialTrack);
 
