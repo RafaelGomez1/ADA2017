@@ -463,8 +463,12 @@ void CSalesmanDlg::OnBnClickedButtonSalesmanBranchAndBound2()
 	}
 	double t0 = Clock();
 	m_Track = m_Graph.SalesmanTrackBranchAndBound2(m_Visits);
+	
+	
+
 	double t1 = Clock();
 	cout << "SalesmanTrackBranchAndBound2. Tiempo: " << t1 - t0 << "seg." << endl;
+
 	m_GraphCtrl.m_DrawDijkstraDistances = false;
 	m_GraphCtrl.Invalidate();
 }

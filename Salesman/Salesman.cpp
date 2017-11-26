@@ -298,6 +298,9 @@ bool EjecutarLineaDeComandos(int nArgs, CString args[])
 		cout << "Grafo......: " << args[2] << endl;
 		cout << "Visitas....: " << args[3] << endl;
 		cout << "Track......: " << args[4] << endl;
+
+		
+
 		try {
 			CGraph graph;
 			graph.Read(args[2]);
